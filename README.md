@@ -26,6 +26,7 @@ Team: Yan Jie Hui, Krishna Palle, Timmy Hoang
 -	The user needs to know exactly what he is eating
 ## Patent Analysis
 ## System Design
+![image](https://github.com/yanjh95/ECE601F19A2-CaloriePredictor/blob/master/cpDesign.png)
 ## MVP
 -	A mobile app in IOS or Android
 -	Asks the user to select the type of food category(Pizza, Burger, Salads) 
@@ -40,3 +41,4 @@ Team: Yan Jie Hui, Krishna Palle, Timmy Hoang
 ## Technologies
 -	Neural Network options: AlexNet, ResNet
 -	PyTorch - beginner friendly, lots of tutorials
+
