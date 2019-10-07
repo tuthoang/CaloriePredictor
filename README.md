@@ -38,9 +38,9 @@ TBD
 ## Major Concerns
 -	Labeling of data
 -	Finding data
--	Food 101 Kaggle
--	FoodDD from University of ottawa
--	Yelp data set
+>> -	Food 101 Kaggle
+>> -	FoodDD from University of ottawa
+>> -	Yelp data set
 ## Technologies
 -	Neural Network options: AlexNet, ResNet
 -	PyTorch - beginner friendly, lots of tutorials
