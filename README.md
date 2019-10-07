@@ -8,7 +8,6 @@ Team: Yan Jie Hui, Krishna Palle, Timmy Hoang
 -	As a **bodybuilder**, I would like to know my daily calorie intake in order to perform better in my sport.
 -	As a very **busy adult**, I would like to easily log my daily calories in order to live a healthier life.
 -	As a **researcher**, I would like to provide an easy way for my subjects to log their diets and send me their data in order to perform studies.
-- As a 
 ## Similar Products
 ### Food mama
 **Pros:**
