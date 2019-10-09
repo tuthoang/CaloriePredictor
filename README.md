@@ -10,7 +10,7 @@ Team: Yan Jie Hui, Krishna Palle, Timmy Hoang
 -	As a **researcher**, I would like to provide an easy way for my subjects to log their diets and send me their data in order to perform studies.
 ## Similar Products
 ### Food mama
-####Pros:
+#### Pros:
 -	Easy for user to log their food
 -	Uses machine learning algorithms to classify the type of food
 #### Cons:
