@@ -10,18 +10,18 @@ Team: Yan Jie Hui, Krishna Palle, Timmy Hoang
 -	As a **researcher**, I would like to provide an easy way for my subjects to log their diets and send me their data in order to perform studies.
 ## Similar Products
 ### Food mama
-**Pros:**
+####Pros:
 -	Easy for user to log their food
 -	Uses machine learning algorithms to classify the type of food
-**Cons:**
+#### Cons:
 -	Hard to accurately predict calories for complex dishes
 -	Requires user input for precise results
 ### My Fitness Pal
-**Pros:**
+#### Pros:
 -	Very precise calories, macro and micro nutrient count.
 -	Allows barcode scan for processed foods
 -	Access to large database of food and restaurant dishes
-**Cons:** 
+#### Cons:
 -	Cumbersome to create recipes, and log every food item
 -	The user needs to know exactly what he is eating
 ### Previous study by American University of Beirut:
