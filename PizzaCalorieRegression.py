@@ -1,6 +1,8 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import xlsxwriter
 import torch
 from torch import nn,from_numpy, tensor, long, float, optim
 from torch.autograd import Variable
@@ -8,16 +10,19 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms, models
 from torch.utils.data import Dataset, DataLoader
 
-from PizzaDataset import PizzaDataset
+from PizzaDataset import CustomDataSet
 
 
 
 if __name__ == '__main__':
-    dataset = PizzaDataset()
-    trainloader = DataLoader(dataset=dataset,
+    train_data_dir = "WebScrape/images"
+    test_data_dir = "WebScrape/test"
+    train_dataset = CustomDataSet(train_data_dir)
+    test_dataset = CustomDataSet(test_data_dir)
+    trainloader = DataLoader(dataset=train_dataset,
                                 batch_size = 32,
                                 shuffle=True, num_workers=2,)
-    testloader = DataLoader(dataset=dataset,
+    testloader = DataLoader(dataset=test_dataset,
                                 batch_size = 32,
                                 shuffle=True, num_workers=2,)
     print('loaded dataset')
@@ -27,6 +32,7 @@ if __name__ == '__main__':
                                   else "cpu")
     model = models.resnet50(pretrained=True)
     print(model)
+    file1 = open("loss.txt","w") 
     for param in model.parameters():
         param.requires_grad = False
     # nn.Linear(2048, 512),
@@ -49,15 +55,18 @@ if __name__ == '__main__':
     EPOCH = 10
     running_loss = 0
     train_losses, test_losses = [], []
+    dataframes = []
+    writer = pd.ExcelWriter('loss.xlsx', engine = 'xlsxwriter')
+    epoch_steps = []
     for epoch in range(EPOCH):
+        running_loss = 0
+        number_images = 0
         for step, (batch_x, batch_y) in enumerate(trainloader): # for each training step
-            
-    #         b_x = Variable(batch_x)
-    #         b_y = Variable(batch_y)
+            number_images += len(batch_y)
             b_x = batch_x
             b_y = batch_y
             prediction = model(b_x).type(float)     # input x and predict based on x
-            print(prediction, b_y)
+            print(prediction, b_y, len(trainloader), len(b_y))
             loss = criterion(prediction, b_y)     # must be (1. nn output, 2. target)
             optimizer.zero_grad()   # clear gradients for next train
             loss.backward()         # backpropagation, compute gradients
@@ -66,9 +75,26 @@ if __name__ == '__main__':
             test_loss = 0
             accuracy = 0
             model.eval()
-            train_losses.append(running_loss/len(trainloader))
-            print(f"Epoch {epoch+1}/{EPOCH}.. "
-                f"Train loss: {running_loss/EPOCH:.3f}.. ")
-            running_loss = 0
+            p = prediction.clone().detach().numpy()
+            y = b_y.clone().detach().numpy()
+
+            print(y.shape)
+            print(p.shape)
+            loss_dataframe = pd.DataFrame({'Actual': y.flatten(), 
+                                            'Predicted': p.flatten()})
+            dataframes.append(loss_dataframe)
+            epoch_steps.append(f'{epoch}_{step}')
+            # loss_dataframe.to_excel(writer, f'{epoch}_{step}')
             model.train()
+        train_losses.append(running_loss/number_images)
+        print(f"Epoch {epoch+1}/{EPOCH}.. "
+            f"Train loss: {running_loss/number_images:.3f}.. ")
+    for i, dataframe in enumerate(dataframes):
+        dataframe.to_excel(writer, sheet_name = epoch_steps[i])
+
+    writer.save()
+    writer.close()
+    file1.close()
     torch.save(model, 'pizzamodel.pth')
+    np.savetxt('loss.csv', train_losses, delimiter=',')
+    plt.plot(train_losses)

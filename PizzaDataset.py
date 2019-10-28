@@ -10,12 +10,12 @@ with open('calories.json') as json_file:
     calories = json.load(json_file)
 
 
-data_dir = "Data/Pizza"
+# data_dir = "WebScrape/images"
 from pathlib import Path
 from PIL import Image
 import numpy as np
 
-def LoadPizzas():
+def LoadImages(data_dir):
     x_dataset = []
     y_dataset = []
     for filename in Path(data_dir).glob('**/*.jpg'):
@@ -30,15 +30,13 @@ def LoadPizzas():
         # im.close()
         pizza_type = filename.parent.parts[-1] # Last part of directory Name
         y_dataset.append(calories[pizza_type])
-#     print(x_dataset)
-#     print(y_dataset)
     return x_dataset, y_dataset
-class PizzaDataset(Dataset):
-    def __init__(self):
-        self.x_data, self.y_data = LoadPizzas()
+
+class CustomDataSet(Dataset):
+    def __init__(self, dataset):
+        self.x_data, self.y_data = LoadImages(dataset)
         self.len = len(self.x_data)
-#         self.x_data = from_numpy(self.x_data)
-#         self.y_data = from_numpy(self.y_data)
+        print(self.len)
         # List of Transformations
         self.transform = transforms.Compose([transforms.Resize(224),
                                                 transforms.RandomCrop(224),
@@ -48,6 +46,7 @@ class PizzaDataset(Dataset):
     def __getitem__(self, index):
         x = self.transform(Image.open(self.x_data[index]))
         y = tensor(self.y_data[index], dtype=float)
+        y = y.unsqueeze(0) # Turn tensor into a 1x vector
         return x, y
     
     def __len__(self):
@@ -57,5 +56,5 @@ if __name__ == '__main__':
     dataset = PizzaDataset()
     train_loader = DataLoader(dataset=dataset,
                                 batch_size = 32,
-                                shuffle=true,
+                                shuffle=True,
                                 num_workers=2)
