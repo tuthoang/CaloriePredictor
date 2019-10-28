@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms, models
 from torch.utils.data import Dataset, DataLoader
 
-from PizzaDataset import CustomDataSet
+from CustomDataset import CustomDataSet
 
 
 
@@ -95,6 +95,6 @@ if __name__ == '__main__':
     writer.save()
     writer.close()
     file1.close()
-    torch.save(model, 'pizzamodel.pth')
+    torch.save(model, 'model.pth')
     np.savetxt('loss.csv', train_losses, delimiter=',')
     plt.plot(train_losses)
