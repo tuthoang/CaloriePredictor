@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from torch import nn,from_numpy, tensor, long, float, optim
 
 from torch.utils.data import Dataset, DataLoader
@@ -16,12 +17,16 @@ import matplotlib as mpl
 with open('calories.json') as json_file:
     calories = json.load(json_file)
 
+with open('calories_json.json') as json_file:
+    krishna_calories = json.loads(json_file.read())
 
 # data_dir = "WebScrape/images"
 from pathlib import Path
 from PIL import Image
 import numpy as np
 
+print(krishna_calories)
+print(type(krishna_calories))
 def LoadImages(data_dir):
     x_dataset = []
     y_dataset = []
@@ -29,6 +34,15 @@ def LoadImages(data_dir):
         x_dataset.append(filename)
         food_type = filename.parent.parts[-1] # Last part of directory Name
         y_dataset.append(calories[food_type])
+    # for filename in Path(data_dir).glob('**/*.png'):
+    #     x_dataset.append(filename)
+    #     keyname = os.path.basename(filename)
+    #     print(keyname)
+    #     print(keyname in krishna_calories)
+    #     print(krishna_calories[keyname])
+    #     y_dataset.append(int(krishna_calories[keyname]))
+
+        # y_dataset.append(int(krishna_calories[food_type]))
     return x_dataset, y_dataset
 
 class CustomDataSet(Dataset):
@@ -63,7 +77,7 @@ def imshow(inp, title=None):
     plt.pause(0.001)  # pause a bit so that plots are updated
 
 if __name__ == '__main__':
-    train_data_dir = "WebScrape/test"
+    train_data_dir = "WebScrape/images"
 
     dataset = CustomDataSet(train_data_dir)
     print(dataset)
@@ -71,6 +85,7 @@ if __name__ == '__main__':
     testloader = DataLoader(dataset=dataset,
                                 batch_size = 32,
                                 shuffle=True, num_workers=2,)
+    print(len(testloader))
     for step, (batch_x, batch_y) in enumerate(testloader): # for each training step
         b_x = batch_x
         b_y = batch_y
