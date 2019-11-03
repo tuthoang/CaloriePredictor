@@ -18,7 +18,7 @@ with open('calories.json') as json_file:
     calories = json.load(json_file)
 
 with open('calories_json.json') as json_file:
-    krishna_calories = json.loads(json_file.read())
+    krishna_calories = json.loads(json.loads(json_file.read()))
 
 # data_dir = "WebScrape/images"
 from pathlib import Path
@@ -34,24 +34,25 @@ def LoadImages(data_dir):
         x_dataset.append(filename)
         food_type = filename.parent.parts[-1] # Last part of directory Name
         y_dataset.append(calories[food_type])
-    # for filename in Path(data_dir).glob('**/*.png'):
-    #     x_dataset.append(filename)
-    #     keyname = os.path.basename(filename)
-    #     print(keyname)
-    #     print(keyname in krishna_calories)
-    #     print(krishna_calories[keyname])
-    #     y_dataset.append(int(krishna_calories[keyname]))
+    for filename in Path(data_dir).glob('**/*.png'):
+        x_dataset.append(filename)
+        keyname = os.path.basename(filename)
+        # print(keyname)
+        # print(keyname in krishna_calories)
+        # print(krishna_calories[keyname])
+        y_dataset.append(int(krishna_calories[keyname]))
 
         # y_dataset.append(int(krishna_calories[food_type]))
     return x_dataset, y_dataset
 
 class CustomDataSet(Dataset):
     def __init__(self, dataset):
+        super().__init__()
         self.x_data, self.y_data = LoadImages(dataset)
         self.len = len(self.x_data)
         print(self.len)
         # List of Transformations
-        self.transform = transforms.Compose([transforms.Resize(224),
+        self.transform = transforms.Compose([transforms.Resize((224,224)),
                                                 transforms.RandomCrop(224),
                                                 transforms.RandomAffine([-90,90]),
                                                 transforms.ColorJitter(contrast=(0.1, 2.0)),
