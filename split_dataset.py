@@ -18,4 +18,11 @@ for d in directories:
                 shutil.move(old_file, new_file)
 
     except NotADirectoryError as e:
-        pass
+        f = directory
+        if f[-4:] == '.png':
+            print("FILE:", f)
+            os.makedirs(dest, exist_ok=True)
+            new_file = os.path.join(dest, os.path.basename(f))
+            print(f, new_file)
+            if np.random.rand(1) < 0.2:
+                shutil.move(f, new_file)
