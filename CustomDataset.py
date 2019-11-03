@@ -54,14 +54,14 @@ class CustomDataSet(Dataset):
         # List of Transformations
         self.transform = transforms.Compose([transforms.Resize((224,224)),
                                                 transforms.RandomCrop(224),
-                                                transforms.RandomAffine([-90,90]),
+                                                transforms.RandomAffine([0,335]),
                                                 transforms.ColorJitter(contrast=(0.1, 2.0)),
                                                 transforms.RandomVerticalFlip(p=0.5),
                                                 transforms.ToTensor()
                                                 ])
 
     def __getitem__(self, index):
-        x = self.transform(Image.open(self.x_data[index]))
+        x = self.transform(Image.open(self.x_data[index]).convert('RGB'))
         y = tensor(self.y_data[index], dtype=float)
         y = y.unsqueeze(0) # Turn tensor into a 1x vector
         return x, y
@@ -82,6 +82,7 @@ if __name__ == '__main__':
 
     dataset = CustomDataSet(train_data_dir)
     print(dataset)
+    print('Number of images: ', len(dataset))
 
     testloader = DataLoader(dataset=dataset,
                                 batch_size = 32,
