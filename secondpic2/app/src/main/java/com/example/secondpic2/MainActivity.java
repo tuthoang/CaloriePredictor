@@ -46,6 +46,12 @@ public class MainActivity extends AppCompatActivity {
                 takepicture();
             }
         });
+        save.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                galleryAddPic();
+            }
+        });
     }
 
     @Override
@@ -64,9 +70,11 @@ public class MainActivity extends AppCompatActivity {
             photoFile = createPhotoFile();
             if(photoFile !=null){
                 pathTofile = photoFile.getAbsolutePath();
-                Uri photoURI = FileProvider.getUriForFile(MainActivity.this, "com.example.android.secondpic2", photoFile);
+                Log.d("filepathprint",pathTofile);
+                Uri photoURI = FileProvider.getUriForFile(MainActivity.this, "com.example.secondpic2", photoFile);
                 takepic.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takepic, 1);
+                //galleryAddPic();
             }
         }
     }
@@ -89,5 +97,19 @@ public class MainActivity extends AppCompatActivity {
         return image;
     }
 
+    private void galleryAddPic() {
+        Log.d("galleryaddpicprint",pathTofile);
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(pathTofile);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        this.sendBroadcast(mediaScanIntent);
+    }
+    private void showPhoto(Uri photoUri){
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setDataAndType(photoUri, "image/*");
+        startActivity(intent);
+    }
 }
 
