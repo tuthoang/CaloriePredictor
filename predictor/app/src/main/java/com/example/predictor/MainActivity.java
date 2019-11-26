@@ -9,8 +9,12 @@ import android.Manifest;
         import android.content.DialogInterface;
         import android.content.Intent;
         import android.content.pm.PackageManager;
-        import android.graphics.Bitmap;
+import android.content.res.AssetFileDescriptor;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
         import android.os.Build;
         import android.os.Bundle;
@@ -32,12 +36,33 @@ import android.net.Uri;
         import android.widget.ImageView;
         import android.widget.Toast;
 
-        import java.io.File;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.ml.common.FirebaseMLException;
+import com.google.firebase.ml.common.modeldownload.FirebaseModelManager;
+import com.google.firebase.ml.custom.FirebaseCustomLocalModel;
+import com.google.firebase.ml.custom.FirebaseModelDataType;
+import com.google.firebase.ml.custom.FirebaseModelInputOutputOptions;
+import com.google.firebase.ml.custom.FirebaseModelInputs;
+import com.google.firebase.ml.custom.FirebaseModelInterpreter;
+import com.google.firebase.ml.custom.FirebaseModelInterpreterOptions;
+import com.google.firebase.ml.custom.FirebaseModelOutputs;
+
+import org.tensorflow.lite.Interpreter;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-        import java.text.SimpleDateFormat;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
         import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
@@ -45,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     private Button takePictureButton;
     private ImageView imageView;
     private Uri file;
+    private Bitmap input_bitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +119,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK
                 && requestCode == TAKE_PHOTO_REQUEST) {
-            processCapturedPhoto();
             InputStream inputStream = null;
             try {
                 inputStream = getContentResolver().openInputStream(fileUri);
@@ -101,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
             Bitmap bmp = BitmapFactory.decodeStream(inputStream);
+            input_bitmap = bmp;
             if( inputStream != null ) {
                 try {
                     inputStream.close();
@@ -109,12 +135,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             imageView.setImageBitmap(bmp);
+            processCapturedPhoto();
 
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
     private void processCapturedPhoto() {
+        loadModel();
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         File f = new File(mCurrentPhotoPath);
         Uri contentUri = Uri.fromFile(f);
@@ -122,4 +150,80 @@ public class MainActivity extends AppCompatActivity {
         mediaScanIntent.setData(contentUri);
         this.sendBroadcast(mediaScanIntent);
     }
+    private MappedByteBuffer tflitemodel;
+
+    private void loadModel(){
+        FirebaseCustomLocalModel localModel = new FirebaseCustomLocalModel.Builder()
+                .setAssetFilePath(getModelPath())
+                .build();
+
+        FirebaseModelInterpreter firebaseInterpreter;
+        try {
+            FirebaseModelInterpreterOptions options =
+                    new FirebaseModelInterpreterOptions.Builder(localModel).build();
+            firebaseInterpreter = FirebaseModelInterpreter.getInstance(options);
+
+            FirebaseModelInputOutputOptions inputOutputOptions;
+            inputOutputOptions =
+                    new FirebaseModelInputOutputOptions.Builder()
+                            .setInputFormat(0, FirebaseModelDataType.FLOAT32, new int[]{1, 224, 224, 3})
+                            .setOutputFormat(0, FirebaseModelDataType.FLOAT32, new int[]{1, 1})
+                            .build();
+
+            float[][][][] input = convertBitmap(input_bitmap);
+            FirebaseModelInputs inputs = null;
+            inputs = new FirebaseModelInputs.Builder()
+                    .add(input)  // add() as many input arrays as your model requires
+                    .build();
+            firebaseInterpreter.run(inputs, inputOutputOptions)
+                    .addOnSuccessListener(
+                            new OnSuccessListener<FirebaseModelOutputs>() {
+                                @Override
+                                public void onSuccess(FirebaseModelOutputs result) {
+                                    // ...
+//                                    result = result;
+                                    float[][] output = result.getOutput(0);
+                                    float probabilities = output[0][0];
+                                    Log.e("Output", output.toString());
+                                    Log.e("RESULT ", String.valueOf(probabilities));
+                                }
+                            })
+                    .addOnFailureListener(
+                            new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    // Task failed with an exception
+                                    // ...
+                                    e.printStackTrace();
+                                    Log.e("ERROR WRITING RESULT", "E");
+                                }
+                            });
+
+        } catch (FirebaseMLException e){
+            e.printStackTrace();
+        }
+    }
+    private float[][][][] convertBitmap(Bitmap bitmap){
+        bitmap = Bitmap.createScaledBitmap(bitmap, 224, 224, true);
+        Log.d("Bitmap", bitmap.toString());
+        int batchNum = 0;
+        float[][][][] input = new float[1][224][224][3];
+        for (int x = 0; x < 224; x++) {
+            for (int y = 0; y < 224; y++) {
+                int pixel = bitmap.getPixel(x, y);
+                // Normalize channel values to [-1.0, 1.0]. This requirement varies by
+                // model. For example, some models might require values to be normalized
+                // to the range [0.0, 1.0] instead.
+                input[batchNum][x][y][0] = (Color.red(pixel) - 127) / 128.0f;
+                input[batchNum][x][y][1] = (Color.green(pixel) - 127) / 128.0f;
+                input[batchNum][x][y][2] = (Color.blue(pixel) - 127) / 128.0f;
+            }
+        }
+        return input;
+    }
+    private String getModelPath(){
+        return "model-2.tflite";
+    }
+
+
 }
