@@ -35,12 +35,18 @@ import android.net.Uri;
         import android.view.Menu;
         import android.view.MenuItem;
         import android.widget.Button;
-        import android.widget.ImageView;
+import android.widget.EditText;
+import android.widget.ImageView;
         import android.widget.Toast;
 
 
+import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.ml.common.FirebaseMLException;
 import com.google.firebase.ml.common.modeldownload.FirebaseModelManager;
 import com.google.firebase.ml.custom.FirebaseCustomLocalModel;
@@ -57,18 +63,23 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
-        import java.util.Date;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    private EditText calorie_label;
     private Button takePictureButton;
     private ImageView imageView;
     private Uri file;
@@ -79,13 +90,28 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        takePictureButton = (Button) findViewById(R.id.button_image);
-        imageView = (ImageView) findViewById(R.id.imageView);
+        signOut();
+        if(checkCurrentUser()) {
+            Log.e("signed in already", "l");
+            calorie_label = (EditText) findViewById(R.id.calorie_count);
+            calorie_label.setFocusable(false);
+            calorie_label.setClickable(false);
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            takePictureButton.setEnabled(false);
-            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE }, 0);
+            takePictureButton = (Button) findViewById(R.id.button_image);
+            imageView = (ImageView) findViewById(R.id.imageView);
+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                takePictureButton.setEnabled(false);
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+            }
+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+            }
+        } else{
+            createSignInIntent();
         }
+
     }
 
     @Override
@@ -97,6 +123,46 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+    public boolean checkCurrentUser() {
+        // [START check_current_user]
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            return true;
+        } return false;
+        // [END check_current_user]
+    }
+
+    private int RC_SIGN_IN = 1234;
+    public void createSignInIntent() {
+        Log.e("Clicking sign in" , "12345");
+        // [START auth_fui_create_intent]
+        // Choose authentication providers
+        List<AuthUI.IdpConfig> providers = Arrays.asList(
+                new AuthUI.IdpConfig.EmailBuilder().build(),
+                new AuthUI.IdpConfig.GoogleBuilder().build());
+
+        // Create and launch sign-in intent
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setAvailableProviders(providers)
+                        .build(),
+                RC_SIGN_IN);
+        // [END auth_fui_create_intent]
+    }
+    
+    public void signOut() {
+        // [START auth_fui_signout]
+        AuthUI.getInstance()
+                .signOut(this)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    public void onComplete(@NonNull Task<Void> task) {
+                        // ...
+                    }
+                });
+        // [END auth_fui_signout]
+    }
+
     String mCurrentPhotoPath;
     int TAKE_PHOTO_REQUEST = 2222;
     Uri fileUri;
