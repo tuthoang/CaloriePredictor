@@ -41,6 +41,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-ml-model-interpreter:22.0.1'
     implementation 'com.google.firebase:firebase-ml-vision:24.0.1'
     implementation 'com.google.android.material:material:1.1.0-alpha10'
+    implementation 'com.google.firebase:firebase-database:19.2.0'
     implementation 'com.firebaseui:firebase-ui-auth:4.3.1'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.0'

@@ -47,6 +47,12 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.logging.Logger;
 import com.google.firebase.ml.common.FirebaseMLException;
 import com.google.firebase.ml.common.modeldownload.FirebaseModelManager;
 import com.google.firebase.ml.custom.FirebaseCustomLocalModel;
@@ -77,6 +83,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import static com.google.firebase.database.Logger.Level.DEBUG;
+
 public class MainActivity extends AppCompatActivity {
 
     private EditText calorie_label;
@@ -84,12 +92,16 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageView;
     private Uri file;
     private Bitmap input_bitmap;
-
+    FirebaseUser user;
+    String TAG = "Main Activity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        // ADD DEBUG LOGGING!!!
+        database.setLogLevel(DEBUG);
         signOut();
         if(checkCurrentUser()) {
             Log.e("signed in already", "l");
@@ -125,7 +137,9 @@ public class MainActivity extends AppCompatActivity {
     }
     public boolean checkCurrentUser() {
         // [START check_current_user]
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        user = FirebaseAuth.getInstance().getCurrentUser();
+//        writeToDatabase();
+
         if (user != null) {
             return true;
         } return false;
@@ -146,18 +160,19 @@ public class MainActivity extends AppCompatActivity {
                 AuthUI.getInstance()
                         .createSignInIntentBuilder()
                         .setAvailableProviders(providers)
+                        .setIsSmartLockEnabled(false)
                         .build(),
                 RC_SIGN_IN);
         // [END auth_fui_create_intent]
     }
-    
+
     public void signOut() {
         // [START auth_fui_signout]
         AuthUI.getInstance()
                 .signOut(this)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     public void onComplete(@NonNull Task<Void> task) {
-                        // ...
+                        createSignInIntent();
                     }
                 });
         // [END auth_fui_signout]
@@ -167,6 +182,7 @@ public class MainActivity extends AppCompatActivity {
     int TAKE_PHOTO_REQUEST = 2222;
     Uri fileUri;
     public void takePicture(View view) {
+
         ContentValues values = new ContentValues(1);
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpg");
         fileUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
@@ -228,8 +244,9 @@ public class MainActivity extends AppCompatActivity {
         }
         else if (resultCode == Activity.RESULT_OK
                 && requestCode == RC_SIGN_IN) {
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            Log.e(user.toString(), "123");
+            user = FirebaseAuth.getInstance().getCurrentUser();
+            Log.e(user.getDisplayName(), "123");
+            checkUserExists(user); // Checks if user exists, if not adds the user.
 
         }
         else {
@@ -320,5 +337,88 @@ public class MainActivity extends AppCompatActivity {
         return "model-2.tflite";
     }
 
+    private void checkUserExists(FirebaseUser u){
+        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference userNameRef = rootRef.child("users").child(u.getUid());
+        ValueEventListener eventListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(!dataSnapshot.exists()) {
+                    //create new user
+                    addUser();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, databaseError.getMessage()); //Don't ignore errors!
+            }
+        };
+        userNameRef.addListenerForSingleValueEvent(eventListener);
+    }
+
+    private void addUser(){
+        Log.e("Writing to DB", "W");
+        // Write a message to the database
+        if (user == null){
+            Log.e(TAG, "No Firebase User Logged in");
+        }
+        String uid = user.getUid();
+        String uname = user.getDisplayName();
+        String email = user.getEmail();
+        User u = new User(uname, email);
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference myRef = database.getReference();
+        myRef.child("users").child(uid).setValue(u);
+
+
+        // [START read_message]
+        // Read from the database
+        // Read from the database
+        ValueEventListener postListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // Get Post object and use the values to update the UI
+                User post = dataSnapshot.getValue(User.class);
+                Log.e(TAG, "Posted");
+                // ...
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Getting Post failed, log a message
+                Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
+                // ...
+            }
+        };
+        // [END read_message]
+    }
+    private void addCalorie(float calorie){
+        String uid = user.getUid();
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference myRef = database.getReference();
+        myRef.child("users").child(uid);
+
+
+        // [START read_message]
+        // Read from the database
+        // Read from the database
+        ValueEventListener postListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // Get Post object and use the values to update the UI
+                User post = dataSnapshot.getValue(User.class);
+                Log.e(TAG, "Posted");
+                // ...
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Getting Post failed, log a message
+                Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
+                // ...
+            }
+        };
+    }
 
 }
