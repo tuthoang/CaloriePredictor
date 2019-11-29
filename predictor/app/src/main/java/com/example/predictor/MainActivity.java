@@ -10,6 +10,8 @@ import android.Manifest;
         import android.content.Intent;
         import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -114,6 +116,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    int PICK_IMAGE = 3333;
+    public void loadPicture(View view){
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -137,9 +146,30 @@ public class MainActivity extends AppCompatActivity {
             imageView.setImageBitmap(bmp);
             processCapturedPhoto();
 
-        } else {
+        }
+        else if (resultCode == Activity.RESULT_OK
+                && requestCode == PICK_IMAGE) {
+            try {
+                InputStream inputStream = this.getContentResolver().openInputStream(data.getData());
+                Bitmap bmp = BitmapFactory.decodeStream(inputStream);
+                input_bitmap = bmp;
+                imageView.setImageBitmap(bmp);
+                Log.d("Set Image View w/ Load", "Successful");
+                loadModel();
+            } catch(FileNotFoundException e){
+                e.printStackTrace();
+            }
+        }
+        else if (resultCode == Activity.RESULT_OK
+                && requestCode == RC_SIGN_IN) {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            Log.e(user.toString(), "123");
+
+        }
+        else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+
     }
     private void processCapturedPhoto() {
         loadModel();
@@ -150,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
         mediaScanIntent.setData(contentUri);
         this.sendBroadcast(mediaScanIntent);
     }
-    private MappedByteBuffer tflitemodel;
+
 
     private void loadModel(){
         FirebaseCustomLocalModel localModel = new FirebaseCustomLocalModel.Builder()
@@ -181,11 +211,10 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void onSuccess(FirebaseModelOutputs result) {
                                     // ...
-//                                    result = result;
                                     float[][] output = result.getOutput(0);
-                                    float probabilities = output[0][0];
-                                    Log.e("Output", output.toString());
-                                    Log.e("RESULT ", String.valueOf(probabilities));
+                                    float calorie_count = output[0][0];
+                                    Log.e("RESULT ", String.valueOf(calorie_count));
+                                    calorie_label.setText(String.valueOf(calorie_count));
                                 }
                             })
                     .addOnFailureListener(

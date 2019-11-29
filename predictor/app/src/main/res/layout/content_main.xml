@@ -14,14 +14,45 @@
         android:layout_height="490dp"
         app:srcCompat="@color/colorAccent" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/button_image"
+        style="@style/Widget.MaterialComponents.Button"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
+        android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="66dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginBottom="100dp"
         android:onClick="takePicture"
-        android:text="Take a picture!" />
+        android:text="Take Image" />
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_load_image"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginLeft="200dp"
+        android:layout_marginBottom="53dp"
+        android:onClick="loadPicture"
+        android:text="Load Image" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+
+        android:hint="Calorie Count">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/calorie_count"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
 
 
 </RelativeLayout>
