@@ -1,25 +1,37 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:layout_height="wrap_content">
 
     <TextView
         android:id="@+id/foodtype"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight=".30" />
-        android:autoSizeTextType="uniform"  />
+        android:layout_height="75dp"
+        android:layout_marginBottom="2dp"
+        android:layout_weight=".30"
+        android:background="#FFFFFF"
+        android:textAlignment="center"
+        android:gravity="center"
+        android:textSize="17sp" />
 
     <TextView
         android:id="@+id/calorie_count"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight=".30" />
-        android:autoSizeTextType="uniform" />
+        android:layout_height="75dp"
+        android:layout_marginBottom="2dp"
+        android:layout_weight=".30"
+        android:background="#FFFFFF"
+        android:gravity="center"
+        android:textSize="17sp" />
+
     <TextView
         android:id="@+id/date"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight=".30" />
-        android:autoSizeTextType="uniform" />
+        android:layout_height="75dp"
+        android:layout_marginBottom="2dp"
+        android:layout_weight=".30"
+        android:background="#FFFFFF"
+        android:gravity="center"
+        android:textSize="17sp" />
+
+
 </LinearLayout>

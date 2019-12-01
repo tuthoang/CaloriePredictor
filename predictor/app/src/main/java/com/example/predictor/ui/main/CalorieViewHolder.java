@@ -37,6 +37,6 @@ public class CalorieViewHolder extends RecyclerView.ViewHolder {
         DateFormat format2=new SimpleDateFormat("EEEE");
         String finalDay=format2.format(dt1);
 
-        dateView.setText(date + "--" + finalDay);
+        dateView.setText(date);
     }
 }
