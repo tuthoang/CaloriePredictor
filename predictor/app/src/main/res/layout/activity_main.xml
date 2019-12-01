@@ -5,12 +5,26 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/AppTheme.AppBarOverlay"/>
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
 
-    <include layout="@layout/content_main" />
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/abc_action_bar_default_height_material"
+        android:background="?attr/colorPrimary"
+        app:popupTheme="@style/AppTheme.PopupOverlay"
+        app:title="@string/app_name" />
+
+
+    <include
+        android:id="@+id/include"
+        layout="@layout/content_main"
+        app:layout_anchorGravity="center" />
+
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

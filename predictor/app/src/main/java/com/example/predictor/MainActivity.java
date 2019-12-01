@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageView;
     private Uri file;
     private Bitmap input_bitmap;
+    private RadioGroup radioGroup;
     FirebaseUser user;
     String TAG = "Main Activity";
     @Override
@@ -116,7 +117,9 @@ public class MainActivity extends AppCompatActivity {
 
             takePictureButton = (Button) findViewById(R.id.button_image);
             imageView = (ImageView) findViewById(R.id.imageView);
-
+            radioGroup = findViewById(R.id.radiogroup);
+            Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 takePictureButton.setEnabled(false);
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
@@ -130,7 +133,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == 0) {
@@ -171,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
         // [END auth_fui_create_intent]
     }
 
-    public void signOut() {
+    public boolean signOut(MenuItem view) {
         // [START auth_fui_signout]
         AuthUI.getInstance()
                 .signOut(this)
@@ -180,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
                         createSignInIntent();
                     }
                 });
+        return true;
         // [END auth_fui_signout]
     }
 
@@ -345,7 +353,19 @@ public class MainActivity extends AppCompatActivity {
         return input;
     }
     private String getModelPath(){
-        return "model-2.tflite";
+        Log.e(TAG, String.valueOf(radioGroup.getCheckedRadioButtonId()));
+        int selectedId = radioGroup.getCheckedRadioButtonId();
+        RadioButton radio = findViewById(selectedId);
+        Log.e(TAG, String.valueOf(radio.getText()));
+        if (String.valueOf(radio.getText()).equals("Sandwich")) {
+            Log.e(TAG, "Sandwich selected");
+            return "model-2.tflite";
+        } else{
+            Log.e(TAG, "Pizza selected");
+            return "model-2.tflite";
+        }
+
+
     }
 
     private void checkUserExists(FirebaseUser u){

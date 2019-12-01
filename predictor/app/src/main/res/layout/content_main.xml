@@ -66,10 +66,40 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="100dp"
-        android:text="View Log"
+        android:layout_marginBottom="227dp"
         android:onClick="viewLog"
-        />
+        android:text="View Log" />
+
+    <RadioGroup
+        android:id="@+id/radiogroup"
+        android:layout_width="137dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="63dp">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Food Type" />
+
+        <RadioButton
+            android:id="@+id/burgerRadio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Sandwich" />
+
+        <RadioButton
+            android:id="@+id/pizzaRadio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            android:text="Pizza" />
+    </RadioGroup>
 
 
 </RelativeLayout>

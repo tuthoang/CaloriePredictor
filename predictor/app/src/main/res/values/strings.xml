@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">predictor</string>
     <string name="action_settings">Settings</string>
+    <string name="action_logout">Logout</string>
     <string name="title_activity_calorie_log">CalorieLogActivity</string>
 </resources>
