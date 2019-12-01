@@ -106,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         // ADD DEBUG LOGGING!!!
         database.setLogLevel(DEBUG);
-        signOut();
         if(checkCurrentUser()) {
             Log.e("signed in already", "l");
             calorie_label = (EditText) findViewById(R.id.calorie_count);
@@ -210,6 +209,11 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
     }
 
+    public void viewLog(View view){
+        Intent intent = new Intent(this, CalorieLogActivity.class);
+        startActivity(intent);
+    }
+    
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK
