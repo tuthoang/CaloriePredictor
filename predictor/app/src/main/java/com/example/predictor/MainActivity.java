@@ -298,6 +298,7 @@ public class MainActivity extends AppCompatActivity {
                                     float calorie_count = output[0][0];
                                     Log.e("RESULT ", String.valueOf(calorie_count));
                                     calorie_label.setText(String.valueOf(calorie_count));
+                                    addCalorie(calorie_count);
                                 }
                             })
                     .addOnFailureListener(
@@ -395,9 +396,11 @@ public class MainActivity extends AppCompatActivity {
     }
     private void addCalorie(float calorie){
         String uid = user.getUid();
+        String foodtype = "Sandwich";
+        Calorie c = new Calorie(calorie, foodtype);
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference myRef = database.getReference();
-        myRef.child("users").child(uid);
+        myRef.child("users").child(uid).child("meals").push().setValue(c);
 
 
         // [START read_message]
