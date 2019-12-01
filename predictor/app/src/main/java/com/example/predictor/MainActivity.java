@@ -22,7 +22,8 @@ import android.net.Uri;
         import android.os.Bundle;
 
         import androidx.annotation.NonNull;
-        import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
         import androidx.appcompat.widget.Toolbar;
         import androidx.core.app.ActivityCompat;
         import androidx.core.content.ContextCompat;
@@ -47,10 +48,12 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.database.logging.Logger;
 import com.google.firebase.ml.common.FirebaseMLException;
@@ -64,6 +67,7 @@ import com.google.firebase.ml.custom.FirebaseModelInterpreterOptions;
 import com.google.firebase.ml.custom.FirebaseModelOutputs;
 
 import org.tensorflow.lite.Interpreter;
+import org.w3c.dom.Comment;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
