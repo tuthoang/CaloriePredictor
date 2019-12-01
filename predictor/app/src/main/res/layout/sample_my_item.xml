@@ -1,17 +1,25 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res/com.example.predictor"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
 
-    <com.example.predictor.MyItem
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        android:background="#ccc"
-        android:paddingLeft="20dp"
-        android:paddingBottom="40dp"
-        app:exampleColor="#33b5e5"
-        app:exampleDimension="24sp"
-        app:exampleDrawable="@android:drawable/ic_menu_add"
-        app:exampleString="Hello, MyItem" />
+    <TextView
+        android:id="@+id/foodtype"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight=".30" />
+        android:autoSizeTextType="uniform"  />
 
-</FrameLayout>
+    <TextView
+        android:id="@+id/calorie_count"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight=".30" />
+        android:autoSizeTextType="uniform" />
+    <TextView
+        android:id="@+id/date"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight=".30" />
+        android:autoSizeTextType="uniform" />
+</LinearLayout>
