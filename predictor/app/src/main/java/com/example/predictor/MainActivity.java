@@ -71,6 +71,7 @@ import com.google.firebase.ml.custom.FirebaseModelOutputs;
 import org.tensorflow.lite.Interpreter;
 import org.w3c.dom.Comment;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -78,6 +79,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -85,6 +87,7 @@ import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -99,6 +102,8 @@ public class MainActivity extends AppCompatActivity {
     private Uri file;
     private Bitmap input_bitmap;
     private RadioGroup radioGroup;
+    private String[] labels;
+    private String classified_label;
     FirebaseUser user;
     String TAG = "Main Activity";
     @Override
@@ -109,6 +114,13 @@ public class MainActivity extends AppCompatActivity {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         // ADD DEBUG LOGGING!!!
         database.setLogLevel(DEBUG);
+        labels = new String[1000];
+        try {
+            getLabels();
+        } catch(IOException e){
+            e.printStackTrace();
+        }
+        classified_label = "";
         if(checkCurrentUser()) {
             Log.e("signed in already", "l");
             calorie_label = (EditText) findViewById(R.id.calorie_count);
@@ -117,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
 
             takePictureButton = (Button) findViewById(R.id.button_image);
             imageView = (ImageView) findViewById(R.id.imageView);
-            radioGroup = findViewById(R.id.radiogroup);
             Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
             setSupportActionBar(toolbar);
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -243,7 +254,9 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
-            imageView.setImageBitmap(bmp);
+            if (bmp != null) {
+                imageView.setImageBitmap(bmp);
+            }
             processCapturedPhoto();
 
         }
@@ -253,9 +266,11 @@ public class MainActivity extends AppCompatActivity {
                 InputStream inputStream = this.getContentResolver().openInputStream(data.getData());
                 Bitmap bmp = BitmapFactory.decodeStream(inputStream);
                 input_bitmap = bmp;
-                imageView.setImageBitmap(bmp);
+                if (bmp != null) {
+                    imageView.setImageBitmap(bmp);
+                }
                 Log.d("Set Image View w/ Load", "Successful");
-                loadModel();
+                loadMobileNetModel();
             } catch(FileNotFoundException e){
                 e.printStackTrace();
             }
@@ -273,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
     private void processCapturedPhoto() {
-        loadModel();
+        loadMobileNetModel();
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         File f = new File(mCurrentPhotoPath);
         Uri contentUri = Uri.fromFile(f);
@@ -282,7 +297,92 @@ public class MainActivity extends AppCompatActivity {
         this.sendBroadcast(mediaScanIntent);
     }
 
+    private void loadMobileNetModel(){
+        Log.e(TAG, "Loading mobile net");
+        classified_label = "";
+        FirebaseCustomLocalModel localModel = new FirebaseCustomLocalModel.Builder()
+                .setAssetFilePath("mobilenet_model.tflite")
+                .build();
 
+        FirebaseModelInterpreter firebaseInterpreter;
+        try {
+            FirebaseModelInterpreterOptions options =
+                    new FirebaseModelInterpreterOptions.Builder(localModel).build();
+            firebaseInterpreter = FirebaseModelInterpreter.getInstance(options);
+
+            FirebaseModelInputOutputOptions inputOutputOptions;
+            inputOutputOptions =
+                    new FirebaseModelInputOutputOptions.Builder()
+                            .setInputFormat(0, FirebaseModelDataType.FLOAT32, new int[]{1, 224, 224, 3})
+                            .setOutputFormat(0, FirebaseModelDataType.FLOAT32, new int[]{1, 1000})
+                            .build();
+
+            float[][][][] input = convertBitmap(input_bitmap);
+            FirebaseModelInputs inputs = null;
+            inputs = new FirebaseModelInputs.Builder()
+                    .add(input)  // add() as many input arrays as your model requires
+                    .build();
+            firebaseInterpreter.run(inputs, inputOutputOptions)
+                    .addOnSuccessListener(
+                            new OnSuccessListener<FirebaseModelOutputs>() {
+                                @Override
+                                public void onSuccess(FirebaseModelOutputs result) {
+                                    // ...
+                                    float[][] output = result.getOutput(0);
+                                    float[] probabilities = output[0];
+//                                    for (float p:probabilities) {
+//                                        Log.e("Probs ", String.valueOf(p));
+//                                    }
+                                    int max_probility_loc = argmax(probabilities);
+                                    String label = labels[max_probility_loc];
+                                    classified_label = label;
+                                    Log.e("CLASSIFICATION", label);
+                                    if (classified_label.equals("cheeseburger") || classified_label.equals("hotdog") || classified_label.equals("bagel")) {
+                                        Log.e(TAG, "Running actual predictor.");
+                                        loadModel();
+                                    } else{
+                                        Toast.makeText(MainActivity.this, "Our models cannot predict this type of food.", Toast.LENGTH_LONG).show();
+                                    }
+                                }
+                            })
+                    .addOnFailureListener(
+                            new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    // Task failed with an exception
+                                    // ...
+                                    classified_label = "";
+                                    e.printStackTrace();
+                                    Log.e("ERROR WRITING RESULT", "E");
+                                }
+                            });
+
+        } catch (FirebaseMLException e){
+            e.printStackTrace();
+        }
+    }
+    private int argmax(float[] probabilities){
+        float largest = probabilities[0];
+        int index = 0;
+
+        for (int i = 1; i < probabilities.length; i++) {
+            if ( probabilities[i] >= largest ) {
+                largest = probabilities[i];
+                index = i;
+            }
+        }
+        return index;
+    }
+    private void getLabels() throws IOException {
+        Log.i(TAG, "Loading labels from assets/labels.txt");
+        BufferedReader reader = new BufferedReader(
+                new InputStreamReader(getAssets().open("labels.txt")));
+        for (int i = 0; i < 1000; i++) {
+            String label = reader.readLine();
+            labels[i] = label;
+        }
+        Log.i(TAG, "Labels loaded successfully");
+    }
     private void loadModel(){
         FirebaseCustomLocalModel localModel = new FirebaseCustomLocalModel.Builder()
                 .setAssetFilePath(getModelPath())
@@ -353,12 +453,8 @@ public class MainActivity extends AppCompatActivity {
         return input;
     }
     private String getModelPath(){
-        Log.e(TAG, String.valueOf(radioGroup.getCheckedRadioButtonId()));
-        int selectedId = radioGroup.getCheckedRadioButtonId();
-        RadioButton radio = findViewById(selectedId);
-        Log.e(TAG, String.valueOf(radio.getText()));
-        if (String.valueOf(radio.getText()).equals("Sandwich")) {
-            Log.e(TAG, "Sandwich selected");
+        if (classified_label.equals("cheeseburger") || classified_label.equals("hotdog") || classified_label.equals("bagel")) {
+            Log.e(TAG, classified_label + " was identified.");
             return "model-2.tflite";
         } else{
             Log.e(TAG, "Pizza selected");
@@ -426,7 +522,7 @@ public class MainActivity extends AppCompatActivity {
     }
     private void addCalorie(float calorie){
         String uid = user.getUid();
-        String foodtype = "Sandwich";
+        String foodtype = classified_label.substring(0,1).toUpperCase() + classified_label.substring(1).toLowerCase();
         Calorie c = new Calorie(calorie, foodtype);
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference myRef = database.getReference();
